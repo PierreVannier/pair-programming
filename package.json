@@ -1,0 +1,33 @@
+{
+  "name": "pair-programming",
+  "main": "lib/pair-programming",
+  "version": "0.0.0",
+  "description": "Pair Programming",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pierrevannier/pair-programming.git"
+  },
+  "homepage": "https://github.com/pierrevannier/pair-programming",
+  "bugs": {
+    "url": "https://github.com/pierrevannier/pair-programming/issues"
+  },
+  "engines": {
+    "atom": ">0.50.0"
+  },
+  "scripts": {
+    "test": "grunt"
+  },
+  "dependencies": {
+    "event-kit": "~1.0.3",
+    "ws": "^0.7.1"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-apm": "0.0.1",
+    "grunt-coffeelint": "0.0.8",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-lesslint": "~1.0.0"
+  }
+}

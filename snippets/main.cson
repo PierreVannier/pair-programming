@@ -1,0 +1,16 @@
+###
+# For more information: https://atom.io/docs/latest/creating-a-package#snippets
+###
+
+".source":
+  "Yeoman website":
+    prefix: "yo_url"
+    body: "http://yeoman.io/"
+  "Yeoman description":
+    prefix: "yo_desc"
+    body: """
+      Yeoman is a robust and opinionated client-side stack, comprising tools and
+      frameworks that can help developers quickly build beautiful web
+      applications. We take care of providing everything needed to get started
+      without any of the normal headaches associated with a manual setup.
+    """

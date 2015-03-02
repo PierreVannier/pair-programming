@@ -1,0 +1,7 @@
+###
+# For more information: https://atom.io/docs/latest/creating-a-package#context-menu
+###
+
+'context-menu':
+  '.workspace':
+    'Toggle Yeoman background': 'pair-programming:toggleBackground'

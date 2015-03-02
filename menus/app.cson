@@ -1,0 +1,16 @@
+###
+# For more information: https://atom.io/docs/latest/creating-a-package#application-menu
+###
+
+'menu': [
+  {
+    'label': 'Packages'
+    'submenu': [
+      'label': 'Pair-programming'
+      'submenu': [
+        { 'label': 'Turn TV On!', 'command': 'pair-programming:turnOn' },
+        { 'label': 'Turn TV Off!', 'command': 'pair-programming:turnOff' }
+      ]
+    ]
+  }
+]
