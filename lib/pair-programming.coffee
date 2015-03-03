@@ -2,8 +2,20 @@
 fs     = require 'fs'
 path   = require 'path'
 WebSocket = require('ws')
+heros  = require './utils'
 
 module.exports =
+  config:
+    twitterHandle:
+      type: 'string'
+      default: "Enter your twitter name here if you don't want to have a silly name"
+      description: "This will just allow us to have your name and picture :-)"
+
+    githubName:
+      type: 'string'
+      default: "Do you really want to be called id-2390903 ?"
+      description: "Aren't programmer supposed to have a github?"
+
   activate: (state) ->
     atom.workspaceView.command "pair-programming:turnOn", => @turnOn()
     atom.workspaceView.command "pair-programming:deactivate", => @deactivate()
@@ -14,6 +26,19 @@ module.exports =
     @initEventListeners()
     @status = true
     @toggleStatusBarDecoration()
+    @initIdentity()
+
+  initIdentity: ->
+    twit = atom.config.get('pair-programming.twitterHandle')
+    git = atom.config.get('pair-programming.githubName')
+    @twitterHandle = if twit == "Enter your twitter name here if you don't want to have a silly name" then @chooseDefaultStupidId() else twit
+    @githubName = if git == "Aren't programmer supposed to have a github?" then @chooseDefaultStupidId() else git
+
+  chooseDefaultStupidId: ->
+    heroes = heros()
+    hero = heroes[Math.floor((Math.random() * heroes.length))-1]
+    console.log(hero)
+    hero
 
   initEventListeners: ->
     @editorListeners = new CompositeDisposable
@@ -28,7 +53,7 @@ module.exports =
   initSocket: ->
     @ws = new WebSocket("ws://gearhunt.net:8080/#{@randomName()}")
     @ws.on 'close', =>
-      console.error("Server closed socket")
+      console.log("Server closed socket")
       @deactivate
     @ws.on 'open', =>
       console.log("Connected")
@@ -48,28 +73,31 @@ module.exports =
     console.log("In randomName")
     planet = ["Mercury",	"Venus", "Earth",	"Mars",	"Jupiter","Saturn", "Uranus", "Neptune"]
     randPlanet = planet[Math.floor((Math.random() * 7))]
-    title = atom.workspace.getActiveTextEditor().getTitle()
-    #console.log(randPlanet)
+    title = @activeTextEditor().getTitle()
     randPlanet
 
   treatServerMessage: (message) ->
     msg = JSON.parse(message)
     console.log(msg)
 
+  activeTextEditor: ->
+    atom.workspace.getActiveTextEditor()
+
 
   actForPaneChange: (pane) ->
     console.log("Change active pane")
-    activeTextEditor = atom.workspace.getActiveTextEditor()
-    @sendData({grammar:activeTextEditor.getGrammar().packageName.split("-")[1], changeType: "text", text: activeTextEditor.buffer.getText()})
+    @sendData({grammar:@activeTextEditor().getGrammar().packageName.split("-")[1]
+              , changeType: "text"
+              , text: @activeTextEditor().buffer.getText()})
 
   actForBufferChange: (event) ->
-    activeTextEditor = atom.workspace.getActiveTextEditor()
-    @sendData({grammar:activeTextEditor.getGrammar().name, changeType: "text", text: activeTextEditor.buffer.getText()})
+    @sendData({grammar:@activeTextEditor().getGrammar().name
+              , changeType: "text"
+              , text: @activeTextEditor().buffer.getText()})
 
 
   actForViewPointChange: (event) ->
-    activeTextEditor = atom.workspace.getActiveTextEditor()
-    totalHeightForBuffer = activeTextEditor.pixelPositionForBufferPosition([activeTextEditor.getLineCount(),0])
+    totalHeightForBuffer = @activeTextEditor().pixelPositionForBufferPosition([@activeTextEditor().getLineCount(),0])
     totalHeightForBuffer = if totalHeightForBuffer.top == 0 then 1 else totalHeightForBuffer.top
     @sendData({changeType: "viewPoint", ratio: (event / totalHeightForBuffer) * 100})
 
