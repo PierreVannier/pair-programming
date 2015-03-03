@@ -2,7 +2,7 @@
 fs     = require 'fs'
 path   = require 'path'
 WebSocket = require('ws')
-heros  = require './utils'
+heroes  = require './utils'
 
 module.exports =
   config:
@@ -35,8 +35,7 @@ module.exports =
     @githubName = if git == "Aren't programmer supposed to have a github?" then @chooseDefaultStupidId() else git
 
   chooseDefaultStupidId: ->
-    heroes = heros()
-    hero = heroes[Math.floor((Math.random() * heroes.length))-1]
+    hero = heroes()[Math.floor((Math.random() * heroes().length))-1]
     console.log(hero)
     hero
 
@@ -54,12 +53,12 @@ module.exports =
     @ws = new WebSocket("ws://gearhunt.net:8080/#{@randomName()}")
     @ws.on 'close', =>
       console.log("Server closed socket")
-      @deactivate
+      @deactivate()
     @ws.on 'open', =>
       console.log("Connected")
     @ws.on 'error', (error) =>
       console.log("#{error}")
-      @deactivate
+      @deactivate()
     @ws.on 'message', (message) =>
       @treatServerMessage(message)
 
