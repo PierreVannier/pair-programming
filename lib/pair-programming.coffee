@@ -21,23 +21,32 @@ module.exports =
     atom.workspaceView.command "pair-programming:deactivate", => @deactivate()
 
   turnOn: ->
-    console.log("Activate")
-    @initSocket()
-    @initEventListeners()
-    @status = true
-    @toggleStatusBarDecoration()
-    @initIdentity()
+    if typeof @turnedOn == "undefined"
+      console.log(@turnedOn)
+      @handle = @initIdentity().trim()
+      @initSocket()
+      @initEventListeners()
+      @status = true
+      @toggleStatusBarDecoration()
+      @turnedOn = true
+
 
   initIdentity: ->
-    twit = atom.config.get('pair-programming.twitterHandle')
-    git = atom.config.get('pair-programming.githubName')
-    @twitterHandle = if twit == "Enter your twitter name here if you don't want to have a silly name" then @chooseDefaultStupidId() else twit
-    @githubName = if git == "Aren't programmer supposed to have a github?" then @chooseDefaultStupidId() else git
+    @twit = atom.config.get('pair-programming.twitterHandle')
+    @git = atom.config.get('pair-programming.githubName')
+    @handle = @chooseDefaultStupidId()
+    if @twit != "Enter your twitter name here if you don't want to have a silly name" && @twit != ""
+      @handle = @twit
+    if @git != "Do you really want to be called id-2390903 ?" && @git != ""
+      @handle = @git
+    @handle
+
+  convertToSlug: (text) ->
+    rand = Math.floor((Math.random() * 100000))
+    text.toLowerCase().replace(" ","-").replace(/[^\w-]+/g,"")+"-"+rand
 
   chooseDefaultStupidId: ->
-    hero = heroes()[Math.floor((Math.random() * heroes().length))-1]
-    console.log(hero)
-    hero
+    @convertToSlug( heroes()[Math.floor((Math.random() * (heroes().length-1)))] )
 
   initEventListeners: ->
     @editorListeners = new CompositeDisposable
@@ -50,7 +59,9 @@ module.exports =
         @actForBufferChange(event)
 
   initSocket: ->
-    @ws = new WebSocket("ws://gearhunt.net:8080/#{@randomName()}")
+    channel = "ws://gearhunt.net:8080/#{@handle}"
+    console.log(channel)
+    @ws = new WebSocket(channel)
     @ws.on 'close', =>
       console.log("Server closed socket")
       @deactivate()
@@ -65,7 +76,8 @@ module.exports =
 
   toggleStatusBarDecoration: ->
     atom.workspaceView.statusBar?.find('.watched-buffer').remove()
-    atom.workspaceView.statusBar?.appendLeft('<span class="watched-buffer"><img src="atom://pair-programming/bundle/owl-16.png"/>&nbsp;Owl is watching...</span>') if @status
+    atom.workspaceView.statusBar?.find('.watchers').remove()
+    atom.workspaceView.statusBar?.appendLeft('<span class="watched-buffer"><img src="atom://pair-programming/bundle/owl-16.png"/></span>') if @status
 
 
   randomName: ->
@@ -77,17 +89,22 @@ module.exports =
 
   treatServerMessage: (message) ->
     msg = JSON.parse(message)
-    console.log(msg)
+    if typeof msg.watchers != "undefined"
+      @updateWatchersCount(msg.watchers)
+
+  updateWatchersCount: (count) ->
+    atom.workspaceView.statusBar?.find('.watchers').remove()
+    atom.workspaceView.statusBar?.appendLeft('<span class="watchers">'+count+'</span>')
 
   activeTextEditor: ->
     atom.workspace.getActiveTextEditor()
 
-
   actForPaneChange: (pane) ->
     console.log("Change active pane")
-    @sendData({grammar:@activeTextEditor().getGrammar().packageName.split("-")[1]
+    activeTextEditor = @activeTextEditor()
+    @sendData({grammar:activeTextEditor.getGrammar().packageName.split("-")[1]
               , changeType: "text"
-              , text: @activeTextEditor().buffer.getText()})
+              , text: activeTextEditor.buffer.getText()}) if typeof activeTextEditor != "undefined"
 
   actForBufferChange: (event) ->
     @sendData({grammar:@activeTextEditor().getGrammar().name
@@ -100,7 +117,6 @@ module.exports =
     totalHeightForBuffer = if totalHeightForBuffer.top == 0 then 1 else totalHeightForBuffer.top
     @sendData({changeType: "viewPoint", ratio: (event / totalHeightForBuffer) * 100})
 
-
   sendData: (data) ->
     @ws.send JSON.stringify data
 
@@ -109,4 +125,5 @@ module.exports =
     @status = false
     @toggleStatusBarDecoration()
     @editorListeners.dispose() if typeof @editorListeners != "undefined"
-    @ws.close() if typeof @ws != "undefined" && @ws.readyState != WebSocket.OPEN
+    @ws.close() if typeof @ws != "undefined"
+    @turnedOn = undefined
