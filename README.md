@@ -11,9 +11,19 @@ I'll try to make it live and maintain this package on a regular basis.
 
 On the other hand, It'll be awesome to create an API (on the server side) for other editor fans to be able to develop package for other editor (sublime, emacs, vi etc...)
 
-
 ## Installation
 TODO
+
+## Shortcuts
+
+### ctrl-alt-y -> Activate broadcast
+### ctra-alt-t -> Deactivate broadcast
+
+## Infos
+
+When you broadcast a small owl (cool animal isn't it ?) is added to your status bar with the number of watchers next to it.<br/>
+
+![Owl](./owl.png?raw=true "The owl is watching you")
 
 ## Troubleshooting
 TODO
