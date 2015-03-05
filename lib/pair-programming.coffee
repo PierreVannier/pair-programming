@@ -20,6 +20,7 @@ module.exports =
     atom.workspaceView.command "pair-programming:turnOn", => @turnOn()
     atom.workspaceView.command "pair-programming:deactivate", => @deactivate()
 
+
   turnOn: ->
     if typeof @turnedOn == "undefined"
       console.log(@turnedOn)
@@ -89,8 +90,9 @@ module.exports =
 
   treatServerMessage: (message) ->
     msg = JSON.parse(message)
-    if typeof msg.watchers != "undefined"
-      @updateWatchersCount(msg.watchers)
+    switch msg.changeType
+      when "watchers" then @updateWatchersCount(msg.watchers)
+      when "hello" then @actForPaneChange(0)
 
   updateWatchersCount: (count) ->
     atom.workspaceView.statusBar?.find('.watchers').remove()
