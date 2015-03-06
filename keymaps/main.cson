@@ -13,4 +13,4 @@
 
 '.workspace':
   'ctrl-alt-y': 'pair-programming:turnOn'
-  'ctrl-alt-t': 'pair-programming:deactivate'
+  'ctrl-alt-t': 'pair-programming:turnOff'

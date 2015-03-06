@@ -16,20 +16,25 @@ module.exports =
       default: "Do you really want to be called id-2390903 ?"
       description: "Aren't programmer supposed to have a github?"
 
+  #helper, just returns a timestamp for logging purpose
+  now: ->
+    (new Date()).toString().split(' ').splice(2,3).join(' ')
+
   activate: (state) ->
     atom.workspaceView.command "pair-programming:turnOn", => @turnOn()
-    atom.workspaceView.command "pair-programming:deactivate", => @deactivate()
+    atom.workspaceView.command "pair-programming:turnOff", => @turnOff()
+    @handle = @initIdentity().trim()
+    @ws = "undefined"
+    console.log("#{@now()} #{@handle}")
 
+  isOnline: ->
+    typeof @ws != "undefined" && @ws.readyState != 3
 
   turnOn: ->
-    if typeof @turnedOn == "undefined"
-      console.log(@turnedOn)
-      @handle = @initIdentity().trim()
-      @initSocket()
-      @initEventListeners()
-      @status = true
-      @toggleStatusBarDecoration()
-      @turnedOn = true
+    console.log("#{@now()} Starting turnOn")
+    @initSocket() if typeof @ws != "undefined"
+    @initEventListeners() if typeof @editorListeners != "undefined"
+    @toggleStatusBarDecoration()
 
 
   initIdentity: ->
@@ -64,12 +69,12 @@ module.exports =
     console.log(channel)
     @ws = new WebSocket(channel)
     @ws.on 'close', =>
-      console.log("Server closed socket")
+      console.log("#{@now()} Server closed socket")
       @deactivate()
     @ws.on 'open', =>
-      console.log("Connected")
+      console.log("#{@now()} Connected")
     @ws.on 'error', (error) =>
-      console.log("#{error}")
+      console.log("#{@now()} #{error}")
       @deactivate()
     @ws.on 'message', (message) =>
       @treatServerMessage(message)
@@ -78,15 +83,7 @@ module.exports =
   toggleStatusBarDecoration: ->
     atom.workspaceView.statusBar?.find('.watched-buffer').remove()
     atom.workspaceView.statusBar?.find('.watchers').remove()
-    atom.workspaceView.statusBar?.appendLeft('<span class="watched-buffer"><img src="atom://pair-programming/bundle/owl-16.png"/></span>') if @status
-
-
-  randomName: ->
-    console.log("In randomName")
-    planet = ["Mercury",	"Venus", "Earth",	"Mars",	"Jupiter","Saturn", "Uranus", "Neptune"]
-    randPlanet = planet[Math.floor((Math.random() * 7))]
-    title = @activeTextEditor().getTitle()
-    randPlanet
+    atom.workspaceView.statusBar?.appendLeft('<span class="watched-buffer"><img src="atom://pair-programming/bundle/owl-16.png"/></span>') if @isOnline()
 
   treatServerMessage: (message) ->
     msg = JSON.parse(message)
@@ -123,9 +120,11 @@ module.exports =
     @ws.send JSON.stringify data
 
   deactivate: ->
-    console.log 'deactivate()'
-    @status = false
-    @toggleStatusBarDecoration()
-    @editorListeners.dispose() if typeof @editorListeners != "undefined"
+    console.log("#{@now()} deactivate()")
+    @turnOff()
+
+  turnOff: ->
+    console.log("#{@now()} TurnOff")
     @ws.close() if typeof @ws != "undefined"
-    @turnedOn = undefined
+    @editorListeners.dispose() if typeof @editorListeners != "undefined"
+    @toggleStatusBarDecoration()

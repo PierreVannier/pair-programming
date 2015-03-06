@@ -1,6 +1,11 @@
 # Pair Programming Atom package
+<span style="color:#F26;">
+**This package is still under heavy development...**
+</span>
+
 This atom package allows you to **broadcast your atom text editor** in real time on the web.
-The idea is to be able to create **"programming channels"** just as "Youtube channel". It's sometimes fun to look at other programming. It might just also be interesting in terms of learning good habits, learning best practices or even finding bugs.<br/>
+The idea is to be able to create **"programming channels"** just as **"Youtube channel"**. It's sometimes fun to look at others programming (I wonder whether it's a normal behaviour though...). <br/>
+It might just also be interesting in terms of learning good habits, learning best practices or even finding bugs.<br/>
 
 This package can also be used for **teaching concerns**. For example, you have a class of people learning to code. You activate the package and ask the students to connect the channel and participate in a coding session.
 
