@@ -1,7 +1,7 @@
 {
   "name": "pair-programming",
   "main": "lib/pair-programming",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Pair Programming",
   "license": "MIT",
   "private": true,
