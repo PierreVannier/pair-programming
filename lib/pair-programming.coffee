@@ -25,6 +25,7 @@ module.exports =
     atom.workspaceView.command "pair-programming:turnOff", => @turnOff()
     @handle = @initIdentity().trim()
     @ws = "undefined"
+    @editorListeners = "undefined"
     console.log("#{@now()} #{@handle}")
 
   isOnline: ->
@@ -66,7 +67,6 @@ module.exports =
 
   initSocket: ->
     channel = "ws://gearhunt.net:8080/#{@handle}"
-    console.log(channel)
     @ws = new WebSocket(channel)
     @ws.on 'close', =>
       console.log("#{@now()} Server closed socket")
@@ -99,7 +99,6 @@ module.exports =
     atom.workspace.getActiveTextEditor()
 
   actForPaneChange: (pane) ->
-    console.log("Change active pane")
     activeTextEditor = @activeTextEditor()
     @sendData({grammar:activeTextEditor.getGrammar().packageName.split("-")[1]
               , changeType: "text"
