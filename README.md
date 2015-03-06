@@ -28,7 +28,7 @@ TODO
 
 When you broadcast a small owl (cool animal isn't it ?) is added to your status bar with the number of watchers next to it.<br/>
 
-![Owl](./owl.png?raw=true "The owl is watching you")
+![Owl](https://github.com/PierreVannier/pair-programming/blob/master/owl.png?raw=true "The owl is watching you")
 
 ## Troubleshooting
 TODO
