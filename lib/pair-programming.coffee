@@ -6,15 +6,20 @@ heroes  = require './utils'
 
 module.exports =
   config:
-    twitterHandle:
-      type: 'string'
-      default: "Enter your twitter name here if you don't want to have a silly name"
-      description: "This will just allow us to have your name and picture :-)"
+    handle:
+      type: "string"
+      default: ""
+      description: "We choose this if you don't provide neither a twitter nor a github"
 
-    githubName:
+    twitter:
+      type: "string"
+      default: ""
+      description: "Your twitter name"
+
+    github:
       type: 'string'
-      default: "Do you really want to be called id-2390903 ?"
-      description: "Aren't programmer supposed to have a github?"
+      default: ""
+      description: "Your GitHub name"
 
   #helper, just returns a timestamp for logging purpose
   now: ->
@@ -23,39 +28,32 @@ module.exports =
   activate: (state) ->
     atom.workspaceView.command "pair-programming:turnOn", => @turnOn()
     atom.workspaceView.command "pair-programming:turnOff", => @turnOff()
-    @handle = @initIdentity().trim()
-    @ws = "undefined"
-    @editorListeners = "undefined"
-    console.log("#{@now()} #{@handle}")
 
+  #socket should be defined and connected to be online
   isOnline: ->
-    typeof @ws != "undefined" && @ws.readyState != 3
+    typeof(@ws) != "undefined" && @ws.readyState == 1
 
   turnOn: ->
     console.log("#{@now()} Starting turnOn")
-    @initSocket() if typeof @ws != "undefined"
-    @initEventListeners() if typeof @editorListeners != "undefined"
+    @chooseHandle()
+    @initSocket()
+    @initEventListeners()
     @toggleStatusBarDecoration()
-
-
-  initIdentity: ->
-    @twit = atom.config.get('pair-programming.twitterHandle')
-    @git = atom.config.get('pair-programming.githubName')
-    @handle = @chooseDefaultStupidId()
-    if @twit != "Enter your twitter name here if you don't want to have a silly name" && @twit != ""
-      @handle = @twit
-    if @git != "Do you really want to be called id-2390903 ?" && @git != ""
-      @handle = @git
-    @handle
 
   convertToSlug: (text) ->
     rand = Math.floor((Math.random() * 100000))
-    text.toLowerCase().replace(" ","-").replace(/[^\w-]+/g,"")+"-"+rand
+    return text.toLowerCase().replace(" ","-").replace(/[^\w-]+/g,"")+"-"+rand
 
-  chooseDefaultStupidId: ->
-    @convertToSlug( heroes()[Math.floor((Math.random() * (heroes().length-1)))] )
+  chooseHandle: ->
+    @handle = atom.config.get('pair-programming.twitter') unless @handle
+    @handle = atom.config.get('pair-programming.github') unless @handle
+    if @handle == ""
+      @handle = @convertToSlug( heroes()[Math.floor((Math.random() * (heroes().length-1)))] )
+    atom.config.set('pair-programming.handle', @handle)
+    console.log("#{@now()} #{@handle}")
 
   initEventListeners: ->
+    console.log("#{@now()} Creating/Adding listeners")
     @editorListeners = new CompositeDisposable
     @editorListeners.add atom.workspace.onDidChangeActivePaneItem (pane) =>
       @actForPaneChange(pane)
@@ -66,6 +64,7 @@ module.exports =
         @actForBufferChange(event)
 
   initSocket: ->
+    console.log("#{@now()} Starting sockets and connections")
     channel = "ws://gearhunt.net:8080/#{@handle}"
     @ws = new WebSocket(channel)
     @ws.on 'close', =>
@@ -79,17 +78,20 @@ module.exports =
     @ws.on 'message', (message) =>
       @treatServerMessage(message)
 
-
   toggleStatusBarDecoration: ->
     atom.workspaceView.statusBar?.find('.watched-buffer').remove()
     atom.workspaceView.statusBar?.find('.watchers').remove()
     atom.workspaceView.statusBar?.appendLeft('<span class="watched-buffer"><img src="atom://pair-programming/bundle/owl-16.png"/></span>') if @isOnline()
 
   treatServerMessage: (message) ->
+    console.log("#{@now()} Got some messages from the server...")
     msg = JSON.parse(message)
     switch msg.changeType
-      when "watchers" then @updateWatchersCount(msg.watchers)
-      when "hello" then @actForPaneChange(0)
+      when "watchers"
+        @updateWatchersCount(msg.watchers)
+      when "hello"
+        @actForPaneChange(0, {twitter: atom.config.get('pair-programming.twitter')
+                              ,github: atom.config.get('pair-programming.github')})
 
   updateWatchersCount: (count) ->
     atom.workspaceView.statusBar?.find('.watchers').remove()
@@ -98,8 +100,19 @@ module.exports =
   activeTextEditor: ->
     atom.workspace.getActiveTextEditor()
 
-  actForPaneChange: (pane) ->
+  #TODO get twitter and github pic of user
+  getPic: (options) ->
+    image = ""
+    if options.type == "github"
+      true
+    if options.type == "twitter"
+      true
+    image
+
+  actForPaneChange: (pane, options={}) ->
     activeTextEditor = @activeTextEditor()
+    twitterPic = @getPic({handle:options.twitter, type:"twitter"}) || ""
+    githubPic = @getPic({handle:options.github, type:"github"}) || ""
     @sendData({grammar:activeTextEditor.getGrammar().packageName.split("-")[1]
               , changeType: "text"
               , text: activeTextEditor.buffer.getText()}) if typeof activeTextEditor != "undefined"
@@ -116,7 +129,7 @@ module.exports =
     @sendData({changeType: "viewPoint", ratio: (event / totalHeightForBuffer) * 100})
 
   sendData: (data) ->
-    @ws.send JSON.stringify data
+    @ws.send?( JSON.stringify(data) ) if @isOnline()
 
   deactivate: ->
     console.log("#{@now()} deactivate()")
@@ -124,6 +137,6 @@ module.exports =
 
   turnOff: ->
     console.log("#{@now()} TurnOff")
-    @ws.close() if typeof @ws != "undefined"
-    @editorListeners.dispose() if typeof @editorListeners != "undefined"
+    @ws.close?()
+    @editorListeners.dispose?()
     @toggleStatusBarDecoration()
