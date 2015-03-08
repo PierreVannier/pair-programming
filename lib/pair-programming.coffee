@@ -31,14 +31,14 @@ module.exports =
 
   #socket should be defined and connected to be online
   isOnline: ->
-    typeof(@ws) != "undefined" && @ws.readyState == 1
+    typeof @ws != "undefined" && @ws.readyState == 1
 
   turnOn: ->
     console.log("#{@now()} Starting turnOn")
     @chooseHandle()
     @initSocket()
     @initEventListeners()
-    @toggleStatusBarDecoration()
+
 
   convertToSlug: (text) ->
     rand = Math.floor((Math.random() * 100000))
@@ -72,6 +72,7 @@ module.exports =
       @deactivate()
     @ws.on 'open', =>
       console.log("#{@now()} Connected")
+      @toggleStatusBarDecoration()
     @ws.on 'error', (error) =>
       console.log("#{@now()} #{error}")
       @deactivate()
